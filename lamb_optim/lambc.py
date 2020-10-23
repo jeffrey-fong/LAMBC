@@ -21,7 +21,7 @@ def log_lamb_rs(optimizer: Optimizer, event_writer: SummaryWriter, token_count: 
     for k, v in results.items():
         event_writer.add_histogram(f'lamb/{k}', torch.tensor(v), token_count)
 
-class Lamb(Optimizer):
+class Lambc(Optimizer):
     r"""Implements Lamb algorithm.
 
     It has been proposed in `Large Batch Optimization for Deep Learning: Training BERT in 76 minutes`_.
