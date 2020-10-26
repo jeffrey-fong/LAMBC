@@ -55,7 +55,7 @@ class Lambc(Optimizer):
         defaults = dict(lr=lr, betas=betas, eps=eps,
                         weight_decay=weight_decay)
         self.adam = adam
-        super(Lamb, self).__init__(params, defaults)
+        super(Lambc, self).__init__(params, defaults)
 
     def step(self, closure=None):
         """Performs a single optimization step.

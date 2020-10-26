@@ -7,24 +7,57 @@ import torchvision.transforms as transforms
 import os
 import argparse
 
+import numpy as np
+
 from lamb_optim.lambc import Lambc
 from models import lenet
 from model import Model
 
 
-def train(model):
+def train(model, train_loader):
 	print('train')
+	model.train()
+	opt = Lambc(model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
+					betas=(.9, .999), adam='lamb')
+	criterion = nn.CrossEntropyLoss()
+	losses = []
 
-def test(model):
+	for epoch in range(args.epochs):
+		epoch_loss = 0
+		total, correct = 0, 0
+		for image, target in train_loader:
+			image, target = image.to(args.device), target.to(args.device)
+			opt.zero_grad()
+			output = model.forward(image)
+			loss = criterion(output, target)
+			loss.backward()
+			opt.step()
+			losses.append(loss.item())
+			_, predicted = output.max(1)
+			total += target.size(0)
+			correct += predicted.eq(target).sum().item()
+
+		# Print the current status
+		print("-" * 25)
+		print("Epoch:{:10}".format(epoch))
+		print("Train Loss:{:10.6}\t".format(np.mean(losses)))
+		print("Accuracy:{:10.6}\t".format(100.*correct/total))
+
+	# Save and update the model after every full training round
+	model.save(args.save_dir + "model" + ".pt")
+
+def test(model, test_loader):
 	print('test')
 
 def main():
-	model = Model(args)
+	# Network Model
+	model = Model(args).to(args.device)
 	#model.save(args.save_dir + 'model.pt')
 
 	# Dataset
 	if args.dataset == 'MNIST':
-		transform = transforms.Compose([transforms.ToTensor(),
+		transform = transforms.Compose([transforms.Resize((32, 32)),
+						transforms.ToTensor(),
 						transforms.Normalize((0.1307,), (0.3081,))])
 		train_set = torchvision.datasets.MNIST('../image_datasets', train=True, 
 										download=True, transform=transform)
@@ -49,16 +82,17 @@ def main():
 	test_loader = torch.utils.data.DataLoader(test_set, 
 					batch_size=100*args.batch_size, shuffle=True, num_workers=2)
 
-	train(model)
-	test(model)
+	train(model, train_loader)
+	test(model, test_loader)
 
 
 
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='LAMB with Adaptive Learning Rate Clipping')
-	parser.add_argument('--lr', type=float, default=0.1)
-	parser.add_argument('--epoch', type=int, default=150)
+	parser.add_argument('--lr', type=float, default=0.0025)
+	parser.add_argument('--weight_decay', type=float, default=0.01)
+	parser.add_argument('--epochs', type=int, default=10)
 	parser.add_argument('--batch_size', type=int, default=64)
 	parser.add_argument('--n', type=int, default=3)
 	parser.add_argument('--dataset', type=str, default='MNIST')

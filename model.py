@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+import os
+
 from models import lenet
 
 class Model(nn.Module):
@@ -12,6 +14,10 @@ class Model(nn.Module):
 		elif args.dataset == 'CIFAR10':
 			# KIV
 			pass
+
+	def forward(self, image):
+		output = self.model(image)
+		return output
 
 	def save(self, path):
 		checkpoint = {'model': self.state_dict()}
