@@ -18,7 +18,7 @@ def train(model, train_loader):
 	print('train')
 	model.train()
 	opt = Lambc(model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
-					betas=(.9, .999), adam='lamb')
+					betas=(.9, .999), adam=False)
 	criterion = nn.CrossEntropyLoss()
 	losses = []
 
@@ -31,11 +31,25 @@ def train(model, train_loader):
 			output = model.forward(image)
 			loss = criterion(output, target)
 			loss.backward()
-			opt.step()
+			_, trust_ratio_list = opt.step()
 			losses.append(loss.item())
 			_, predicted = output.max(1)
 			total += target.size(0)
 			correct += predicted.eq(target).sum().item()
+
+			# Record norm ratios
+			norm_weights, norm_grads = [], []
+			for param in model.parameters():
+				weights = param.data.cpu().detach().numpy()
+				grads = param.grad.cpu().detach().numpy()
+				norm_weights.append(np.sum(np.power(weights, 2)))
+				norm_grads.append(np.sum(np.power(grads, 2)))
+			#print(norm_weights)
+			#print(norm_grads)
+			#print(np.divide(norm_weights, norm_grads))
+			print(trust_ratio_list)
+			break
+		break
 
 		# Print the current status
 		print("-" * 25)
@@ -101,8 +115,8 @@ def main():
 	test_loader = torch.utils.data.DataLoader(test_set, 
 					batch_size=100*args.batch_size, shuffle=True, num_workers=2)
 
-	#train(model, train_loader)
-	test(model, test_loader)
+	train(model, train_loader)
+	#test(model, test_loader)
 
 
 
@@ -110,7 +124,7 @@ def main():
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='LAMB with Adaptive Learning Rate Clipping')
 	parser.add_argument('--lr', type=float, default=0.0025)
-	parser.add_argument('--weight_decay', type=float, default=0.01)
+	parser.add_argument('--weight_decay', type=float, default=0.0)
 	parser.add_argument('--epochs', type=int, default=10)
 	parser.add_argument('--batch_size', type=int, default=64)
 	parser.add_argument('--n', type=int, default=3)

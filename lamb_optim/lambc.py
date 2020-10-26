@@ -68,6 +68,7 @@ class Lambc(Optimizer):
         if closure is not None:
             loss = closure()
 
+        trust_ratio_list = []
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is None:
@@ -122,4 +123,6 @@ class Lambc(Optimizer):
 
                 p.data.add_(-step_size * trust_ratio, adam_step)
 
-        return loss
+                trust_ratio_list.append(trust_ratio.item())
+
+        return loss, trust_ratio_list
