@@ -47,7 +47,26 @@ def train(model, train_loader):
 	model.save(args.save_dir + "model" + ".pt")
 
 def test(model, test_loader):
+	if os.path.exists(args.save_dir + 'model.pt'):
+			model.load(args.save_dir + 'model.pt')
 	print('test')
+	model.eval()
+	criterion = nn.CrossEntropyLoss()
+	losses = []
+	total, correct = 0, 0
+	for image, target in test_loader:
+		image, target = image.to(args.device), target.to(args.device)
+		output = model.forward(image)
+		loss = criterion(output, target)
+		losses.append(loss.item())
+		_, predicted = output.max(1)
+		total += target.size(0)
+		correct += predicted.eq(target).sum().item()
+	# Print the current status
+	print("-" * 25)
+	print("Test Loss:{:10.6}\t".format(np.mean(losses)))
+	print("Accuracy:{:10.6}\t".format(100.*correct/total))
+
 
 def main():
 	# Network Model
@@ -82,7 +101,7 @@ def main():
 	test_loader = torch.utils.data.DataLoader(test_set, 
 					batch_size=100*args.batch_size, shuffle=True, num_workers=2)
 
-	train(model, train_loader)
+	#train(model, train_loader)
 	test(model, test_loader)
 
 
