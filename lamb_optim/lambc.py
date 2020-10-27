@@ -65,10 +65,11 @@ class Lambc(Optimizer):
                 and returns the loss.
         """
         loss = None
+        trust_list = []
+        count = 0
         if closure is not None:
             loss = closure()
 
-        trust_ratio_list = []
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is None:
@@ -113,6 +114,7 @@ class Lambc(Optimizer):
                 adam_norm = adam_step.pow(2).sum().sqrt()
                 if weight_norm == 0 or adam_norm == 0:
                     trust_ratio = 1
+                    print(count)
                 else:
                     trust_ratio = weight_norm / adam_norm
                 state['weight_norm'] = weight_norm
@@ -123,6 +125,10 @@ class Lambc(Optimizer):
 
                 p.data.add_(-step_size * trust_ratio, adam_step)
 
-                trust_ratio_list.append(trust_ratio.item())
+                trust_list.append(trust_ratio)
+                print(p.size())
+                count += 1
 
-        return loss, trust_ratio_list
+        print(min(trust_list), max(trust_list))
+
+        return loss

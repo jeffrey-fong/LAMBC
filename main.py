@@ -10,7 +10,7 @@ import argparse
 import numpy as np
 
 from lamb_optim.lambc import Lambc
-from models import lenet
+from models import lenet, resnet
 from model import Model
 
 
@@ -31,23 +31,12 @@ def train(model, train_loader):
 			output = model.forward(image)
 			loss = criterion(output, target)
 			loss.backward()
-			_, trust_ratio_list = opt.step()
+			opt.step()
 			losses.append(loss.item())
 			_, predicted = output.max(1)
 			total += target.size(0)
 			correct += predicted.eq(target).sum().item()
 
-			# Record norm ratios
-			norm_weights, norm_grads = [], []
-			for param in model.parameters():
-				weights = param.data.cpu().detach().numpy()
-				grads = param.grad.cpu().detach().numpy()
-				norm_weights.append(np.sum(np.power(weights, 2)))
-				norm_grads.append(np.sum(np.power(grads, 2)))
-			#print(norm_weights)
-			#print(norm_grads)
-			#print(np.divide(norm_weights, norm_grads))
-			print(trust_ratio_list)
 			break
 		break
 
@@ -115,7 +104,7 @@ def main():
 	test_loader = torch.utils.data.DataLoader(test_set, 
 					batch_size=100*args.batch_size, shuffle=True, num_workers=2)
 
-	#train(model, train_loader)
+	train(model, train_loader)
 	#test(model, test_loader)
 
 
@@ -123,7 +112,7 @@ def main():
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='LAMB with Adaptive Learning Rate Clipping')
-	parser.add_argument('--lr', type=float, default=0.0025)
+	parser.add_argument('--lr', type=float, default=0.001)
 	parser.add_argument('--weight_decay', type=float, default=0.0)
 	parser.add_argument('--epochs', type=int, default=10)
 	parser.add_argument('--batch_size', type=int, default=64)
