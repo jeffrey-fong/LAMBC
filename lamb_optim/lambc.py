@@ -104,7 +104,7 @@ class Lambc(Optimizer):
                 # Apply bias to lr to avoid broadcast.
                 step_size = group['lr'] # * math.sqrt(bias_correction2) / bias_correction1
 
-                weight_norm = p.data.pow(2).sum().sqrt().clamp(0, 10)
+                weight_norm = p.data.pow(2).sum().sqrt()#.clamp(0, 10)
 
                 adam_step = exp_avg / exp_avg_sq.sqrt().add(group['eps'])
                 if group['weight_decay'] != 0:
