@@ -37,9 +37,6 @@ def train(model, train_loader):
 			total += target.size(0)
 			correct += predicted.eq(target).sum().item()
 
-			break
-		break
-
 		# Print the current status
 		print("-" * 25)
 		print("Epoch:{:10}".format(epoch))
@@ -74,7 +71,6 @@ def test(model, test_loader):
 def main():
 	# Network Model
 	model = Model(args).to(args.device)
-	#model.save(args.save_dir + 'model.pt')
 
 	# Dataset
 	if args.dataset == 'MNIST':
@@ -105,17 +101,17 @@ def main():
 					batch_size=100*args.batch_size, shuffle=True, num_workers=2)
 
 	train(model, train_loader)
-	#test(model, test_loader)
+	test(model, test_loader)
 
 
 
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='LAMB with Adaptive Learning Rate Clipping')
-	parser.add_argument('--lr', type=float, default=0.001)
+	parser.add_argument('--lr', type=float, default=0.01)
 	parser.add_argument('--weight_decay', type=float, default=0.0)
 	parser.add_argument('--epochs', type=int, default=10)
-	parser.add_argument('--batch_size', type=int, default=64)
+	parser.add_argument('--batch_size', type=int, default=2000)
 	parser.add_argument('--n', type=int, default=3)
 	parser.add_argument('--dataset', type=str, default='CIFAR10')
 	parser.add_argument('--device', type=str, default='cpu')
