@@ -44,6 +44,8 @@ def train(model, train_loader):
 		print("Accuracy:{:10.6}\t".format(100.*correct/total))
 
 	# Save and update the model after every full training round
+	if not os.path.exists(args.save_dir):
+		os.mkdir(args.save_dir)
 	model.save(args.save_dir + "model" + ".pt")
 
 def test(model, test_loader):
@@ -110,7 +112,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='LAMB with Adaptive Learning Rate Clipping')
 	parser.add_argument('--lr', type=float, default=0.01)
 	parser.add_argument('--weight_decay', type=float, default=0.0)
-	parser.add_argument('--epochs', type=int, default=10)
+	parser.add_argument('--epochs', type=int, default=3)
 	parser.add_argument('--batch_size', type=int, default=2000)
 	parser.add_argument('--n', type=int, default=3)
 	parser.add_argument('--dataset', type=str, default='CIFAR10')
