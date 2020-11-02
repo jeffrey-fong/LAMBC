@@ -124,6 +124,11 @@ class Lambc(Optimizer):
                 if self.adam:
                     trust_ratio = 1
 
+                if trust_ratio > 5.0:
+                    trust_ratio = 5.0
+                elif trust_ratio < 0.01:
+                    trust_ratio = 0.01
+
                 p.data.add_(-step_size * trust_ratio, adam_step)
 
                 trust_list.append(trust_ratio)
