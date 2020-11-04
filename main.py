@@ -6,6 +6,7 @@ import torchvision.transforms as transforms
 
 import os
 import argparse
+import time
 
 import numpy as np
 
@@ -13,12 +14,14 @@ from lamb_optim.lambc import Lambc
 from models import lenet, resnet
 from model import Model
 
+avg_accuracy = 0.0
 
 def train(model, train_loader):
 	print('train')
 	model.train()
 	opt = Lambc(model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
-					betas=(.9, .999), adam=False)
+					betas=(.9, .999), adam=False, clip=args.clip, 
+					clip_bound=args.clip_bound)
 	criterion = nn.CrossEntropyLoss()
 	losses = []
 
@@ -49,6 +52,7 @@ def train(model, train_loader):
 	model.save(args.save_dir + "model" + ".pt")
 
 def test(model, test_loader):
+	global avg_accuracy
 	if os.path.exists(args.save_dir + 'model.pt'):
 			model.load(args.save_dir + 'model.pt')
 	print('test')
@@ -68,12 +72,11 @@ def test(model, test_loader):
 	print("-" * 25)
 	print("Test Loss:{:10.6}\t".format(np.mean(losses)))
 	print("Accuracy:{:10.6}\t".format(100.*correct/total))
+	avg_accuracy += (100.*correct/total)
 
 
 def main():
-	# Network Model
-	model = Model(args).to(args.device)
-
+	global avg_accuracy
 	# Dataset
 	if args.dataset == 'MNIST':
 		transform = transforms.Compose([transforms.Resize((32, 32)),
@@ -100,10 +103,18 @@ def main():
 	train_loader = torch.utils.data.DataLoader(train_set, 
 					batch_size=args.batch_size, shuffle=True, num_workers=2)
 	test_loader = torch.utils.data.DataLoader(test_set, 
-					batch_size=100*args.batch_size, shuffle=True, num_workers=2)
+					batch_size=args.batch_size, shuffle=True, num_workers=2)
 
-	train(model, train_loader)
-	test(model, test_loader)
+
+	for i in range(10):
+		print('Epoch:', i)
+		# Network Model
+		model = Model(args).to(args.device)
+		train(model, train_loader)
+		time.sleep(1.0)
+		test(model, test_loader)
+
+	print('Average test accuracy:', avg_accuracy/10.0)
 
 
 
@@ -112,7 +123,9 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='LAMB with Adaptive Learning Rate Clipping')
 	parser.add_argument('--lr', type=float, default=0.01)
 	parser.add_argument('--weight_decay', type=float, default=0.0)
-	parser.add_argument('--epochs', type=int, default=10)
+	parser.add_argument('--clip', type=bool, default=True)
+	parser.add_argument('--clip_bound', type=float, default=[0.01, 5.0])
+	parser.add_argument('--epochs', type=int, default=30)
 	parser.add_argument('--batch_size', type=int, default=1000)
 	parser.add_argument('--n', type=int, default=3)
 	parser.add_argument('--dataset', type=str, default='CIFAR10')

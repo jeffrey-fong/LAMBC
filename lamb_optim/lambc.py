@@ -43,7 +43,7 @@ class Lambc(Optimizer):
     """
 
     def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-6,
-                 weight_decay=0, adam=False):
+                 weight_decay=0, adam=False, clip=False, clip_bound=[0.01, 10.0]):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:
@@ -54,6 +54,8 @@ class Lambc(Optimizer):
             raise ValueError("Invalid beta parameter at index 1: {}".format(betas[1]))
         defaults = dict(lr=lr, betas=betas, eps=eps,
                         weight_decay=weight_decay)
+        self.clip = clip
+        self.clip_bound = clip_bound
         self.adam = adam
         super(Lambc, self).__init__(params, defaults)
 
@@ -124,10 +126,9 @@ class Lambc(Optimizer):
                 if self.adam:
                     trust_ratio = 1
 
-                if trust_ratio > 5.0:
-                    trust_ratio = 5.0
-                elif trust_ratio < 0.01:
-                    trust_ratio = 0.01
+                if self.clip:
+                    trust_ratio = self.clip_bound[0] if trust_ratio < self.clip_bound[0] else trust_ratio
+                    trust_ratio = self.clip_bound[1] if trust_ratio > self.clip_bound[1] else trust_ratio
 
                 p.data.add_(-step_size * trust_ratio, adam_step)
 
@@ -136,10 +137,10 @@ class Lambc(Optimizer):
                 adam_list.append(adam_norm)
                 count += 1
 
-        print(min(trust_list), min(weight_list), min(adam_list))
-        for val in trust_list:
-            if val != 1 and val > maxim:
-                maxim = val
-        print(maxim, max(weight_list), max(adam_list))
+        #print(min(trust_list), min(weight_list), min(adam_list))
+        #for val in trust_list:
+        #    if val != 1 and val > maxim:
+        #        maxim = val
+        #print(maxim, max(weight_list), max(adam_list))
 
         return loss
