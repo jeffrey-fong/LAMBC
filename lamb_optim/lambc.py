@@ -43,7 +43,7 @@ class Lambc(Optimizer):
     """
 
     def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-6,
-                 weight_decay=0, adam=False, clip=False, clip_bound=[0.01, 10.0]):
+                 weight_decay=0, adam=False, clip=False, clip_bound=10.0):
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
         if not 0.0 <= eps:
@@ -117,7 +117,6 @@ class Lambc(Optimizer):
                 adam_norm = adam_step.pow(2).sum().sqrt()
                 if weight_norm == 0 or adam_norm == 0:
                     trust_ratio = 1
-                    print(count)
                 else:
                     trust_ratio = weight_norm / adam_norm
                 state['weight_norm'] = weight_norm
@@ -127,8 +126,7 @@ class Lambc(Optimizer):
                     trust_ratio = 1
 
                 if self.clip:
-                    trust_ratio = self.clip_bound[0] if trust_ratio < self.clip_bound[0] else trust_ratio
-                    trust_ratio = self.clip_bound[1] if trust_ratio > self.clip_bound[1] else trust_ratio
+                    trust_ratio = self.clip_bound if trust_ratio > self.clip_bound else trust_ratio
 
                 p.data.add_(-step_size * trust_ratio, adam_step)
 

@@ -124,7 +124,7 @@ if __name__ == '__main__':
 	parser.add_argument('--lr', type=float, default=0.01)
 	parser.add_argument('--weight_decay', type=float, default=0.0)
 	parser.add_argument('--clip', type=bool, default=True)
-	parser.add_argument('--clip_bound', type=float, default=[0.01, 5.0])
+	parser.add_argument('--clip_bound', type=float, default=5.0)
 	parser.add_argument('--epochs', type=int, default=30)
 	parser.add_argument('--batch_size', type=int, default=1000)
 	parser.add_argument('--n', type=int, default=3)
