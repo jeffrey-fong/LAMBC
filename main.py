@@ -18,13 +18,11 @@ from model import Model
 
 avg_accuracy = 0.0
 train_iter, test_iter = 0, 0
-train_correct, train_total = 0, 0
-test_correct, test_total = 0, 0
 trust_ratio_list = []
 writer = SummaryWriter()
 
 def train(model, train_loader):
-	global train_iter, writer, train_correct, train_total, trust_ratio_list
+	global train_iter, writer, trust_ratio_list
 	model.train()
 	opt = Lambc(model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
 					betas=(.9, .999), adam=False, clip=args.clip, 
@@ -32,6 +30,7 @@ def train(model, train_loader):
 	criterion = nn.CrossEntropyLoss()
 	losses = []
 
+	correct, total = 0, 0
 	for batch_idx, (image, target) in enumerate(train_loader):
 		image, target = image.to(args.device), target.to(args.device)
 		opt.zero_grad()
@@ -46,14 +45,14 @@ def train(model, train_loader):
 			trust_ratio_list[-1].append(trust_list)
 		losses.append(loss.item())
 		_, predicted = output.max(1)
-		train_total += target.size(0)
-		train_correct += predicted.eq(target).sum().item()
-		writer.add_scalar("Accuracy/train", 100.*train_correct/train_total, train_iter)
+		total += target.size(0)
+		correct += predicted.eq(target).sum().item()
+		writer.add_scalar("Accuracy/train", 100.*predicted.eq(target).sum().item()/target.size(0), train_iter)
 		train_iter += 1
 
 	# Print the current status
 	print("Train Loss:{:10.6}\t".format(np.mean(losses)))
-	print("Accuracy:{:10.6}\t".format(100.*train_correct/train_total))
+	print("Accuracy:{:10.6}\t".format(100.*correct/total))
 	writer.flush()
 
 	# Save and update the model after every full training round
@@ -62,25 +61,26 @@ def train(model, train_loader):
 	model.save(args.save_dir + "model" + ".pt")
 
 def test(model, test_loader):
-	global avg_accuracy, test_iter, writer, test_correct, test_total
+	global avg_accuracy, test_iter, writer
 	if os.path.exists(args.save_dir + 'model.pt'):
 			model.load(args.save_dir + 'model.pt')
 	model.eval()
 	criterion = nn.CrossEntropyLoss()
 	losses = []
+	correct, total = 0, 0
 	for image, target in test_loader:
 		image, target = image.to(args.device), target.to(args.device)
 		output = model.forward(image)
 		loss = criterion(output, target)
 		losses.append(loss.item())
 		_, predicted = output.max(1)
-		test_total += target.size(0)
-		test_correct += predicted.eq(target).sum().item()
+		total += target.size(0)
+		correct += predicted.eq(target).sum().item()
 	# Print the current status
 	print("Test Loss:{:10.6}\t".format(np.mean(losses)))
-	print("Accuracy:{:10.6}\t".format(100.*test_correct/test_total))
-	avg_accuracy += (100.*test_correct/test_total)
-	writer.add_scalar("Accuracy/test", 100.*test_correct/test_total, test_iter)
+	print("Accuracy:{:10.6}\t".format(100.*correct/total))
+	avg_accuracy += (100.*correct/total)
+	writer.add_scalar("Accuracy/test", 100.*correct/total, test_iter)
 	test_iter += 1
 	writer.flush()
 
