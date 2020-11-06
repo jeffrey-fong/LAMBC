@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.utils.tensorboard import SummaryWriter
 
 import torchvision
 import torchvision.transforms as transforms
@@ -15,8 +16,11 @@ from models import lenet, resnet
 from model import Model
 
 avg_accuracy = 0.0
+train_iter, test_iter = 0, 0
+writer = SummaryWriter()
 
 def train(model, train_loader):
+	global train_iter, writer
 	print('train')
 	model.train()
 	opt = Lambc(model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
@@ -33,18 +37,22 @@ def train(model, train_loader):
 			opt.zero_grad()
 			output = model.forward(image)
 			loss = criterion(output, target)
+			writer.add_scalar("Loss/train", loss, train_iter)
 			loss.backward()
 			opt.step()
 			losses.append(loss.item())
 			_, predicted = output.max(1)
 			total += target.size(0)
 			correct += predicted.eq(target).sum().item()
+			writer.add_scalar("Accuracy/train", 100.*correct/total, train_iter)
+			train_iter += 1
 
 		# Print the current status
 		print("-" * 25)
 		print("Epoch:{:10}".format(epoch))
 		print("Train Loss:{:10.6}\t".format(np.mean(losses)))
 		print("Accuracy:{:10.6}\t".format(100.*correct/total))
+		writer.flush()
 
 	# Save and update the model after every full training round
 	if not os.path.exists(args.save_dir):
@@ -52,7 +60,7 @@ def train(model, train_loader):
 	model.save(args.save_dir + "model" + ".pt")
 
 def test(model, test_loader):
-	global avg_accuracy
+	global avg_accuracy, test_iter, writer
 	if os.path.exists(args.save_dir + 'model.pt'):
 			model.load(args.save_dir + 'model.pt')
 	print('test')
@@ -68,11 +76,14 @@ def test(model, test_loader):
 		_, predicted = output.max(1)
 		total += target.size(0)
 		correct += predicted.eq(target).sum().item()
+		test_iter += 1
 	# Print the current status
 	print("-" * 25)
 	print("Test Loss:{:10.6}\t".format(np.mean(losses)))
 	print("Accuracy:{:10.6}\t".format(100.*correct/total))
 	avg_accuracy += (100.*correct/total)
+	writer.add_scalar("Accuracy/test", 100.*correct/total, test_iter)
+	writer.flush()
 
 
 def main():
@@ -106,7 +117,10 @@ def main():
 					batch_size=args.batch_size, shuffle=True, num_workers=2)
 
 
-	for i in range(10):
+	model = Model(args).to(args.device)
+	train(model, train_loader)
+	test(model, test_loader)
+	'''for i in range(10):
 		print('Epoch:', i)
 		# Network Model
 		model = Model(args).to(args.device)
@@ -114,7 +128,7 @@ def main():
 		time.sleep(1.0)
 		test(model, test_loader)
 
-	print('Average test accuracy:', avg_accuracy/10.0)
+	print('Average test accuracy:', avg_accuracy/10.0)'''
 
 
 
@@ -125,7 +139,7 @@ if __name__ == '__main__':
 	parser.add_argument('--weight_decay', type=float, default=0.0)
 	parser.add_argument('--clip', type=bool, default=True)
 	parser.add_argument('--clip_bound', type=float, default=5.0)
-	parser.add_argument('--epochs', type=int, default=30)
+	parser.add_argument('--epochs', type=int, default=80)
 	parser.add_argument('--batch_size', type=int, default=1000)
 	parser.add_argument('--n', type=int, default=3)
 	parser.add_argument('--dataset', type=str, default='CIFAR10')

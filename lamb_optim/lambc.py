@@ -68,7 +68,6 @@ class Lambc(Optimizer):
         """
         loss = None
         trust_list, weight_list, adam_list = [], [], []
-        count = 0
         maxim = 0
         if closure is not None:
             loss = closure()
@@ -133,7 +132,6 @@ class Lambc(Optimizer):
                 trust_list.append(trust_ratio)
                 weight_list.append(weight_norm)
                 adam_list.append(adam_norm)
-                count += 1
 
         #print(min(trust_list), min(weight_list), min(adam_list))
         #for val in trust_list:

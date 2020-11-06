@@ -12,10 +12,10 @@ class Model(nn.Module):
 		if args.dataset == 'MNIST':
 			self.model = lenet.LeNet(input_dim=1)
 		elif args.dataset == 'CIFAR10':
-			self.model = resnet.ResNet18()
+			#self.model = resnet.ResNet18()
 			#self.model = resnet.ResNet34()
 			#self.model = resnet.ResNet50()
-			#self.model = alexnet.AlexNet()
+			self.model = alexnet.AlexNet()
 
 	def forward(self, image):
 		output = self.model(image)
