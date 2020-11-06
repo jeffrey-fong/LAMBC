@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 import os
 import argparse
 import time
+import json
 
 import numpy as np
 
@@ -19,10 +20,11 @@ avg_accuracy = 0.0
 train_iter, test_iter = 0, 0
 train_correct, train_total = 0, 0
 test_correct, test_total = 0, 0
+trust_ratio_list = []
 writer = SummaryWriter()
 
 def train(model, train_loader):
-	global train_iter, writer, train_correct, train_total
+	global train_iter, writer, train_correct, train_total, trust_ratio_list
 	model.train()
 	opt = Lambc(model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
 					betas=(.9, .999), adam=False, clip=args.clip, 
@@ -30,14 +32,18 @@ def train(model, train_loader):
 	criterion = nn.CrossEntropyLoss()
 	losses = []
 
-	for image, target in train_loader:
+	for batch_idx, (image, target) in enumerate(train_loader):
 		image, target = image.to(args.device), target.to(args.device)
 		opt.zero_grad()
 		output = model.forward(image)
 		loss = criterion(output, target)
 		writer.add_scalar("Loss/train", loss, train_iter)
 		loss.backward()
-		opt.step()
+		_, trust_list = opt.step()
+		if batch_idx == 0:
+			trust_ratio_list.append([trust_list])
+		else:
+			trust_ratio_list[-1].append(trust_list)
 		losses.append(loss.item())
 		_, predicted = output.max(1)
 		train_total += target.size(0)
@@ -80,8 +86,7 @@ def test(model, test_loader):
 
 
 def main():
-	global avg_accuracy, train_iter, test_iter, \
-			train_correct, train_total, test_correct, test_total
+	global avg_accuracy, trust_ratio_list
 	# Dataset
 	if args.dataset == 'MNIST':
 		transform = transforms.Compose([transforms.Resize((32, 32)),
@@ -117,6 +122,10 @@ def main():
 		train(model, train_loader)
 		test(model, test_loader)
 		print("-" * 25)
+
+	# Save trust ratio log as (epoch x iter x layers)
+	with open('./trust_ratio.json', 'w') as fout:
+		json.dump(trust_ratio_list, fout)
 	'''for i in range(10):
 		print('Epoch:', i)
 		# Network Model
@@ -134,7 +143,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='LAMB with Adaptive Learning Rate Clipping')
 	parser.add_argument('--lr', type=float, default=0.01)
 	parser.add_argument('--weight_decay', type=float, default=0.0)
-	parser.add_argument('--clip', type=bool, default=False)
+	parser.add_argument('--clip', type=bool, default=True)
 	parser.add_argument('--clip_bound', type=float, default=5.0)
 	parser.add_argument('--epochs', type=int, default=80)
 	parser.add_argument('--batch_size', type=int, default=1000)

@@ -117,7 +117,7 @@ class Lambc(Optimizer):
                 if weight_norm == 0 or adam_norm == 0:
                     trust_ratio = 1
                 else:
-                    trust_ratio = weight_norm / adam_norm
+                    trust_ratio = (weight_norm / adam_norm).item()
                 state['weight_norm'] = weight_norm
                 state['adam_norm'] = adam_norm
                 state['trust_ratio'] = trust_ratio
@@ -139,4 +139,4 @@ class Lambc(Optimizer):
         #        maxim = val
         #print(maxim, max(weight_list), max(adam_list))
 
-        return loss
+        return loss, trust_list
