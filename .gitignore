@@ -3,4 +3,7 @@
 *.out
 past_models
 results
+results_bp
 *.gz
+models/__pycache__
+runs
