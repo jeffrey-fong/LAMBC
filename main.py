@@ -18,7 +18,7 @@ from torch.utils.tensorboard import SummaryWriter
 avg_accuracy = 0.0
 train_iter, test_iter = 0, 0
 trust_ratio_list = []
-writer = SummaryWriter()
+writer = None
 
 
 def train(model, train_loader):
@@ -109,7 +109,8 @@ def main():
         test_set = torchvision.datasets.CIFAR10('../image_datasets', train=False,
                                                 download=True, transform=transform_test)
     elif args.dataset == 'ImageNet':
-        pass  # KIV
+        train_set = torchvision.datasets.ImageNet('../image_datasets', train=True, download=False)
+        test_set = torchvision.datasets.ImageNet('../image_datasets', train=False, download=False)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=2)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.batch_size, shuffle=True, num_workers=2)
@@ -140,7 +141,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--weight_decay', type=float, default=0.0)
     parser.add_argument('--clip', type=bool, default=True)
-    parser.add_argument('--clip_bound', type=float, default=5.0)
+    parser.add_argument('--clip_bound', type=float, default=1.0)
     parser.add_argument('--epochs', type=int, default=80)
     parser.add_argument('--batch_size', type=int, default=1000)
     parser.add_argument('--n', type=int, default=3)
@@ -149,8 +150,9 @@ if __name__ == '__main__':
     parser.add_argument('--save_dir', type=str, default='./past_models/')
     args = parser.parse_args()
 
+    seed = 1
+    torch.manual_seed(seed)
+    writer = SummaryWriter(log_dir=os.path.join("results", f"clip_{args.clip}_{args.dataset}_{seed}_{args.batch_size}"))
     args.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-    torch.manual_seed(1)
 
     main()
