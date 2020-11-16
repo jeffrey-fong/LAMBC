@@ -11,7 +11,8 @@ class Model(nn.Module):
 		# Model
 		if args.dataset == 'MNIST':
 			self.model = lenet.LeNet(input_dim=1)
-		elif args.dataset == 'CIFAR10':
+		elif args.dataset == 'CIFAR10' or \
+				args.dataset == 'ImageNet':
 			self.model = resnet.ResNet18()
 			#self.model = resnet.ResNet34()
 			#self.model = resnet.ResNet50()
