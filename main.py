@@ -113,7 +113,7 @@ def main():
         test_set = torchvision.datasets.ImageNet('../image_datasets', train=False, download=False)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=2)
-    test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.batch_size, shuffle=True, num_workers=2)
+    test_loader = torch.utils.data.DataLoader(test_set, batch_size=100, shuffle=True, num_workers=2)
 
     model = Model(args).to(args.device)
     for epoch in range(args.epochs):
