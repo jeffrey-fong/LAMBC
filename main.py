@@ -10,6 +10,8 @@ import time
 import json
 
 import numpy as np
+
+from dataset import ImageNetDataset
 from lamb_optim.lambc import Lambc
 from models import lenet, resnet
 from model import Model
@@ -47,7 +49,7 @@ def train(model, train_loader):
         _, predicted = output.max(1)
         total += target.size(0)
         correct += predicted.eq(target).sum().item()
-        writer.add_scalar("Accuracy/train", 100. * predicted.eq(target).sum().item() / target.size(0), train_iter)
+        writer.add_scalar("Accuracy/train", 100. * predicted.eq(target).int().sum().item() / target.size(0), train_iter)
         train_iter += 1
 
     # Print the current status
@@ -109,11 +111,17 @@ def main():
         test_set = torchvision.datasets.CIFAR10('../image_datasets', train=False,
                                                 download=True, transform=transform_test)
     elif args.dataset == 'ImageNet':
-        train_set = torchvision.datasets.ImageNet('../image_datasets', train=True, download=False)
-        test_set = torchvision.datasets.ImageNet('../image_datasets', train=False, download=False)
+        # train_set = torchvision.datasets.ImageNet('../image_datasets', train=True, download=False)
+        # test_set = torchvision.datasets.ImageNet('../image_datasets', train=False, download=False)
 
-    train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=2)
-    test_loader = torch.utils.data.DataLoader(test_set, batch_size=100, shuffle=True, num_workers=2)
+        train_set = ImageNetDataset(train=True)
+        test_set = ImageNetDataset(train=False)
+
+    # train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=2)
+    # test_loader = torch.utils.data.DataLoader(test_set, batch_size=100, shuffle=True, num_workers=2)
+
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_set, batch_size=100, shuffle=True)
 
     model = Model(args).to(args.device)
     for epoch in range(args.epochs):
@@ -143,7 +151,7 @@ if __name__ == '__main__':
     parser.add_argument('--clip', type=bool, default=True)
     parser.add_argument('--clip_bound', type=float, default=1.0)
     parser.add_argument('--epochs', type=int, default=80)
-    parser.add_argument('--batch_size', type=int, default=1000)
+    parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--n', type=int, default=3)
     parser.add_argument('--dataset', type=str, default='ImageNet')
     parser.add_argument('--device', type=str, default='cpu')
