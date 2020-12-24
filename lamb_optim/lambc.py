@@ -1,4 +1,4 @@
-"""Lamb optimizer."""
+"""Lambc optimizer."""
 
 import collections
 import math
@@ -22,26 +22,6 @@ def log_lamb_rs(optimizer: Optimizer, event_writer: SummaryWriter, token_count: 
         event_writer.add_histogram(f'lamb/{k}', torch.tensor(v), token_count)
 
 class Lambc(Optimizer):
-    r"""Implements Lamb algorithm.
-
-    It has been proposed in `Large Batch Optimization for Deep Learning: Training BERT in 76 minutes`_.
-
-    Arguments:
-        params (iterable): iterable of parameters to optimize or dicts defining
-            parameter groups
-        lr (float, optional): learning rate (default: 1e-3)
-        betas (Tuple[float, float], optional): coefficients used for computing
-            running averages of gradient and its square (default: (0.9, 0.999))
-        eps (float, optional): term added to the denominator to improve
-            numerical stability (default: 1e-8)
-        weight_decay (float, optional): weight decay (L2 penalty) (default: 0)
-        adam (bool, optional): always use trust ratio = 1, which turns this into
-            Adam. Useful for comparison purposes.
-
-    .. _Large Batch Optimization for Deep Learning: Training BERT in 76 minutes:
-        https://arxiv.org/abs/1904.00962
-    """
-
     def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-6,
                  weight_decay=0, adam=False, clip=False, clip_bound=10.0):
         if not 0.0 <= lr:
@@ -78,7 +58,7 @@ class Lambc(Optimizer):
                     continue
                 grad = p.grad.data
                 if grad.is_sparse:
-                    raise RuntimeError('Lamb does not support sparse gradients, consider SparseAdam instad.')
+                    raise RuntimeError('Lamb does not support sparse gradients, consider SparseAdam instead.')
 
                 state = self.state[p]
 
@@ -107,7 +87,7 @@ class Lambc(Optimizer):
                 # Apply bias to lr to avoid broadcast.
                 step_size = group['lr'] # * math.sqrt(bias_correction2) / bias_correction1
 
-                weight_norm = p.data.pow(2).sum().sqrt()#.clamp(0, 10)
+                weight_norm = p.data.pow(2).sum().sqrt()
 
                 adam_step = exp_avg / exp_avg_sq.sqrt().add(group['eps'])
                 if group['weight_decay'] != 0:
@@ -132,11 +112,5 @@ class Lambc(Optimizer):
                 trust_list.append(trust_ratio)
                 weight_list.append(weight_norm)
                 adam_list.append(adam_norm)
-
-        #print(min(trust_list), min(weight_list), min(adam_list))
-        #for val in trust_list:
-        #    if val != 1 and val > maxim:
-        #        maxim = val
-        #print(maxim, max(weight_list), max(adam_list))
 
         return loss, trust_list

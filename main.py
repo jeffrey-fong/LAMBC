@@ -65,8 +65,7 @@ def train(model, train_loader):
 
 def test(model, test_loader):
     global avg_accuracy, test_iter, writer
-    # if os.path.exists(args.save_dir + 'model.pt'):
-    #     model.load(args.save_dir + 'model.pt')
+
     model.eval()
     criterion = nn.CrossEntropyLoss()
     losses = []
@@ -111,14 +110,8 @@ def main():
         test_set = torchvision.datasets.CIFAR10('../image_datasets', train=False,
                                                 download=True, transform=transform_test)
     elif args.dataset == 'ImageNet':
-        # train_set = torchvision.datasets.ImageNet('../image_datasets', train=True, download=False)
-        # test_set = torchvision.datasets.ImageNet('../image_datasets', train=False, download=False)
-
         train_set = ImageNetDataset(train=True)
         test_set = ImageNetDataset(train=False)
-
-    # train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=2)
-    # test_loader = torch.utils.data.DataLoader(test_set, batch_size=100, shuffle=True, num_workers=2)
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=100, shuffle=True)
@@ -133,27 +126,17 @@ def main():
     # Save trust ratio log as (epoch x iter x layers)
     with open('./trust_ratio.json', 'w') as fout:
         json.dump(trust_ratio_list, fout)
-    '''for i in range(10):
-        print('Epoch:', i)
-        # Network Model
-        model = Model(args).to(args.device)
-        train(model, train_loader)
-        time.sleep(1.0)
-        test(model, test_loader)
-
-    print('Average test accuracy:', avg_accuracy/10.0)'''
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='LAMB with Adaptive Learning Rate Clipping')
+    parser = argparse.ArgumentParser(description='LAMB with Trust Ratio Clipping')
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--weight_decay', type=float, default=0.0)
     parser.add_argument('--clip', type=bool, default=True)
     parser.add_argument('--clip_bound', type=float, default=1.0)
     parser.add_argument('--epochs', type=int, default=80)
-    parser.add_argument('--batch_size', type=int, default=128)
-    parser.add_argument('--n', type=int, default=3)
-    parser.add_argument('--dataset', type=str, default='ImageNet')
+    parser.add_argument('--batch_size', type=int, default=1000)
+    parser.add_argument('--dataset', type=str, default='CIFAR10')
     parser.add_argument('--device', type=str, default='cpu')
     parser.add_argument('--save_dir', type=str, default='./past_models/')
     args = parser.parse_args()

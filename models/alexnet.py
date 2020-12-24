@@ -1,8 +1,5 @@
 import torch.nn as nn
 
-'''
-modified to fit dataset size
-'''
 NUM_CLASSES = 10
 
 
