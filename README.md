@@ -2,7 +2,7 @@
 
 This repository contains code for [LAMBC](https://arxiv.org/abs/2011.13584), an optimizer that trains with layer-wise adaptive learning rate. LAMBC improves upon [LAMB](https://arxiv.org/abs/1904.00962) by clipping the trust ratio which stabilizes its magnitude and prevent extreme values.
 
-Experiments on image classification tasks (CIFAR-10 and down-sampled ImageNet-64) validate LAMBC's improvement over LAMB across different batch sizes and clipping bounds
+Experiments on image classification tasks (CIFAR-10 and down-sampled ImageNet-64) validate LAMBC's improvement over LAMB across different batch sizes and clipping bounds.
 
 ![batch size](batch_size.png)
 
