@@ -4,22 +4,9 @@ import collections
 import math
 
 import torch
-from tensorboardX import SummaryWriter
 from torch.optim import Optimizer
 
 
-def log_lamb_rs(optimizer: Optimizer, event_writer: SummaryWriter, token_count: int):
-    """Log a histogram of trust ratio scalars in across layers."""
-    results = collections.defaultdict(list)
-    for group in optimizer.param_groups:
-        for p in group['params']:
-            state = optimizer.state[p]
-            for i in ('weight_norm', 'adam_norm', 'trust_ratio'):
-                if i in state:
-                    results[i].append(state[i])
-
-    for k, v in results.items():
-        event_writer.add_histogram(f'lamb/{k}', torch.tensor(v), token_count)
 
 class Lambc(Optimizer):
     def __init__(self, params, lr=1e-3, betas=(0.9, 0.999), eps=1e-6,
