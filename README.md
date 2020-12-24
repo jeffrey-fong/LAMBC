@@ -33,6 +33,10 @@ optimizer = Lambc(model.parameters(), lr=0.001, weight_decay=0.0, betas=(.9, .99
 
 The boolean `clip` parameter decides whether clipping is enabled. LAMBC will perform just like the normal LAMB when the parameter is set to False. The `clip_bound` parameter determines the clipping bound for the trust ratio. In our experiments, the bound value of 1.0 provided the optimal performance (see figure above). However, we emphasize that the bound value will likely change according to the model used and the task complexity. Therefore, you will still need to optimize the hyperparameters depending on your specific problem.
 
+## Acknowledgements
+
+We would like to acknowledge that the LAMBC optimizer code was adapted from [this repository](https://github.com/cybertronai/pytorch-lamb).
+
 ## Citation
 
 If you apply LAMBC to your research and project, please cite our work ([Improving Layer-wise Adaptive Rate Methods using Trust Ratio Clipping](https://arxiv.org/abs/2011.13584)):
